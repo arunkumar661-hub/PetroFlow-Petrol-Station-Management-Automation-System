@@ -1,0 +1,101 @@
+package com.petroflow.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "sales")
+public class Sale {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank(message = "Transaction number is required")
+    @Column(name = "transaction_number", unique = true, nullable = false, length = 40)
+    private String transactionNumber;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pump_transaction_id", unique = true, nullable = false)
+    private PumpTransaction pumpTransaction;
+
+    @NotNull(message = "Fuel reference is required")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "fuel_id", nullable = false)
+    private Fuel fuel;
+
+    @NotNull(message = "Pump reference is required")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "pump_id", nullable = false)
+    private Pump pump;
+
+    @NotNull(message = "Employee reference is required")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
+    @NotNull(message = "Quantity is required")
+    @DecimalMin(value = "0.01", message = "Quantity must be greater than 0")
+    @Column(name = "quantity", nullable = false, precision = 12, scale = 2)
+    private BigDecimal quantity;
+
+    @NotBlank(message = "Unit is required")
+    @Column(name = "unit", nullable = false, length = 10)
+    private String unit;
+
+    @NotNull(message = "Price per unit is required")
+    @DecimalMin(value = "0.01", message = "Price per unit must be greater than 0")
+    @Column(name = "price_per_unit", nullable = false, precision = 10, scale = 2)
+    private BigDecimal pricePerUnit;
+
+    @NotNull(message = "Total amount is required")
+    @DecimalMin(value = "0.01", message = "Total amount must be greater than 0")
+    @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal totalAmount;
+
+    @NotNull(message = "Sale date is required")
+    @Column(name = "sale_date", nullable = false)
+    private LocalDateTime saleDate;
+
+    public Sale() {}
+    public Sale(String transactionNumber, PumpTransaction pumpTransaction, Fuel fuel, Pump pump,
+                Employee employee, BigDecimal quantity, String unit, BigDecimal pricePerUnit,
+                BigDecimal totalAmount, LocalDateTime saleDate) {
+        this.transactionNumber = transactionNumber;
+        this.pumpTransaction = pumpTransaction;
+        this.fuel = fuel;
+        this.pump = pump;
+        this.employee = employee;
+        this.quantity = quantity;
+        this.unit = unit;
+        this.pricePerUnit = pricePerUnit;
+        this.totalAmount = totalAmount;
+        this.saleDate = saleDate;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getTransactionNumber() { return transactionNumber; }
+    public void setTransactionNumber(String transactionNumber) { this.transactionNumber = transactionNumber; }
+    public PumpTransaction getPumpTransaction() { return pumpTransaction; }
+    public void setPumpTransaction(PumpTransaction pumpTransaction) { this.pumpTransaction = pumpTransaction; }
+    public Fuel getFuel() { return fuel; }
+    public void setFuel(Fuel fuel) { this.fuel = fuel; }
+    public Pump getPump() { return pump; }
+    public void setPump(Pump pump) { this.pump = pump; }
+    public Employee getEmployee() { return employee; }
+    public void setEmployee(Employee employee) { this.employee = employee; }
+    public BigDecimal getQuantity() { return quantity; }
+    public void setQuantity(BigDecimal quantity) { this.quantity = quantity; }
+    public String getUnit() { return unit; }
+    public void setUnit(String unit) { this.unit = unit; }
+    public BigDecimal getPricePerUnit() { return pricePerUnit; }
+    public void setPricePerUnit(BigDecimal pricePerUnit) { this.pricePerUnit = pricePerUnit; }
+    public BigDecimal getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+    public LocalDateTime getSaleDate() { return saleDate; }
+    public void setSaleDate(LocalDateTime saleDate) { this.saleDate = saleDate; }
+}

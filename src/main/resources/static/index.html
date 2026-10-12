@@ -1,0 +1,532 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetroFlow - Petrol Station Management & Automation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/simulator.css">
+    <link rel="stylesheet" href="css/tables.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/invoice.css">
+</head>
+<body>
+    <div id="toast-container"></div>
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon"><i class="fas fa-gas-pump"></i></div>
+            <div>
+                <div class="brand-title">PETROFLOW</div>
+                <div class="brand-subtitle">Station Automation</div>
+            </div>
+        </div>
+        <div class="nav-group">
+            <div class="nav-label">Core</div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-chart-line"></i> <span>Dashboard</span>
+                </li>
+            </ul>
+        </div>
+        <div class="nav-group">
+            <div class="nav-label">Forecourt Operations</div>
+            <ul class="nav-menu">
+                <li class="nav-item" data-view="monitor"><i class="fas fa-desktop"></i> <span>Pump Monitor</span></li>
+                <li class="nav-item" data-view="simulator"><i class="fas fa-tachometer-alt"></i> <span>Pump Simulator</span> <span class="nav-badge">LIVE</span></li>
+                <li class="nav-item" data-view="sales"><i class="fas fa-receipt"></i> <span>Sales Ledger</span></li>
+                <li class="nav-item" data-view="billing"><i class="fas fa-file-invoice-dollar"></i> <span>Billing & Invoices</span></li>
+            </ul>
+        </div>
+        <div class="nav-group">
+            <div class="nav-label">Station Management</div>
+            <ul class="nav-menu">
+                <li class="nav-item" data-view="fuels"><i class="fas fa-oil-can"></i> <span>Fuel Master</span></li>
+                <li class="nav-item" data-view="inventory"><i class="fas fa-cubes"></i> <span>Tanks & Inventory</span></li>
+                <li class="nav-item" data-view="employees"><i class="fas fa-user-tie"></i> <span>Employees</span></li>
+                <li class="nav-item" data-view="suppliers"><i class="fas fa-truck-moving"></i> <span>Suppliers</span></li>
+            </ul>
+        </div>
+        <div class="nav-group">
+            <div class="nav-label">Intelligence</div>
+            <ul class="nav-menu">
+                <li class="nav-item" data-view="reports"><i class="fas fa-chart-pie"></i> <span>Reports & Analytics</span></li>
+            </ul>
+        </div>
+    </aside>
+    <main class="main-wrapper">
+        <header class="top-bar">
+            <div class="page-title">
+                <h1 id="page-heading">Operational Dashboard</h1>
+                <p id="page-subheading">Real-time forecourt telemetry and sales performance</p>
+            </div>
+            <div class="top-actions">
+                <div class="live-badge"><span class="live-dot"></span> Forecourt Active</div>
+                <div class="clock-display" id="live-clock">--:--:--</div>
+            </div>
+        </header>
+        <div class="content-container">
+            <!-- 1. DASHBOARD VIEW -->
+            <section id="view-dashboard" class="view-section active">
+                <div id="dashboard-alerts-container"></div>
+                <div class="kpi-grid">
+                    <div class="kpi-card kpi-blue">
+                        <div class="kpi-info">
+                            <h4>Today's Sales</h4>
+                            <div class="kpi-value" id="kpi-sales-count">0</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fas fa-shopping-cart"></i></div>
+                    </div>
+                    <div class="kpi-card kpi-green">
+                        <div class="kpi-info">
+                            <h4>Today's Revenue</h4>
+                            <div class="kpi-value" id="kpi-today-revenue">₹0.00</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fas fa-indian-rupee-sign"></i></div>
+                    </div>
+                    <div class="kpi-card kpi-amber">
+                        <div class="kpi-info">
+                            <h4>Fuel Dispensed</h4>
+                            <div class="kpi-value" id="kpi-fuel-dispensed">0 L</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fas fa-gas-pump"></i></div>
+                    </div>
+                    <div class="kpi-card kpi-cyan">
+                        <div class="kpi-info">
+                            <h4>Active Dispensers</h4>
+                            <div class="kpi-value" id="kpi-active-pumps">0 / 0</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fas fa-server"></i></div>
+                    </div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="chart-card">
+                        <div class="chart-header"><h3>Revenue Trend (Last 7 Days)</h3></div>
+                        <div class="chart-wrapper"><canvas id="revenueTrendChart"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header"><h3>Fuel Share by Sales (₹)</h3></div>
+                        <div class="chart-wrapper"><canvas id="fuelWiseChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="table-card">
+                    <div class="table-toolbar">
+                        <h3 style="font-size: 1.05rem; font-weight: 700;">Recent Forecourt Sales</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="switchView('sales')">View Full Ledger</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Transaction No</th><th>Pump</th><th>Fuel</th><th>Quantity</th><th>Rate</th><th>Amount</th><th>Time</th></tr>
+                            </thead>
+                            <tbody id="dashboard-recent-sales-tbody">
+                                <tr><td colspan="7" class="empty-state">Loading sales...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. PUMP MONITOR VIEW -->
+            <section id="view-monitor" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <h3 style="font-size: 1.1rem; font-weight: 700;">Forecourt Dispensers Status</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">Real-time dispenser operational telemetry</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('add-pump-modal')"><i class="fas fa-plus"></i> Add Dispenser</button>
+                </div>
+                <div class="kpi-grid" id="pumps-grid"></div>
+            </section>
+
+            <!-- 3. PUMP SIMULATOR VIEW -->
+            <section id="view-simulator" class="view-section">
+                <div class="simulator-layout">
+                    <div class="dispenser-unit">
+                        <div class="dispenser-header">
+                            <div class="dispenser-brand">PETROFLOW DIGITAL DISPENSER</div>
+                            <span class="dispenser-code" id="sim-dispenser-tag">PUMP-01</span>
+                            <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 4px;" id="sim-dispenser-fuel-name">Petrol</div>
+                        </div>
+                        <div class="digital-panel">
+                            <div class="digital-meter meter-price">
+                                <span class="meter-label">UNIT RATE (₹)</span>
+                                <span class="meter-display" id="meter-rate">0.00</span>
+                            </div>
+                            <div class="digital-meter">
+                                <span class="meter-label" id="sim-disp-unit-label">VOLUME (L)</span>
+                                <span class="meter-display" id="meter-volume">0.00</span>
+                            </div>
+                            <div class="digital-meter meter-amount">
+                                <span class="meter-label">TOTAL AMOUNT (₹)</span>
+                                <span class="meter-display" id="meter-amount">0.00</span>
+                            </div>
+                        </div>
+                        <div class="flow-animation-box" id="sim-flow-box">
+                            <div class="nozzle-status" id="sim-nozzle-status">NOZZLE HOLSTERED - DISPENSER IDLE</div>
+                            <div class="flow-bar"><div class="flow-progress" id="sim-progress-bar"></div></div>
+                        </div>
+                        <div class="dispenser-controls">
+                            <button class="btn-dispenser btn-start" id="btn-sim-start" onclick="SimulatorModule.startDispensing()"><i class="fas fa-play"></i> START</button>
+                            <button class="btn-dispenser btn-stop" id="btn-sim-stop" onclick="SimulatorModule.stopDispensing()" disabled><i class="fas fa-pause"></i> STOP</button>
+                            <button class="btn-dispenser btn-complete" id="btn-sim-complete" onclick="SimulatorModule.completeTransaction()" disabled><i class="fas fa-check-double"></i> COMPLETE TRANSACTION</button>
+                            <button class="btn-dispenser btn-reset" id="btn-sim-reset" onclick="SimulatorModule.resetSimulator()"><i class="fas fa-redo"></i> RESET METERS</button>
+                        </div>
+                    </div>
+                    <div class="sim-config-card">
+                        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 20px;"><i class="fas fa-sliders-h" style="color: var(--accent-blue);"></i> Dispenser Parameters</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label"><span class="sim-step-badge">1</span>Select Dispenser</label>
+                                <select class="form-control" id="sim-pump-select" onchange="SimulatorModule.onPumpSelected(this.value)"></select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><span class="sim-step-badge">2</span>Attendant Staff</label>
+                                <select class="form-control" id="sim-emp-select"></select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><span class="sim-step-badge">3</span>Target Quantity</label>
+                                <input type="number" step="0.1" min="0.1" class="form-control" id="sim-quantity-input" placeholder="20" value="20" oninput="SimulatorModule.calculateAmount()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Payment Method</label>
+                                <select class="form-control" id="sim-pay-method">
+                                    <option value="CASH">Cash</option><option value="UPI">UPI / QR Pay</option><option value="CARD">Debit / Credit Card</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Customer Name</label>
+                                <input type="text" class="form-control" id="sim-cust-name" value="Walk-in Customer">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Vehicle Registration</label>
+                                <input type="text" class="form-control" id="sim-cust-vehicle" placeholder="MH 02 AB 1234">
+                            </div>
+                        </div>
+                        <div style="background: var(--bg-surface); padding: 18px; border-radius: 10px; border: 1px solid var(--border-color); margin-top: 16px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; text-align: center;">
+                                <div><div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">CURRENT PRICE</div><strong style="color: #f59e0b; font-size: 1.1rem;" id="sim-price-display">₹0.00</strong></div>
+                                <div><div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">AVAILABLE STOCK</div><strong style="color: #10b981; font-size: 1.1rem;" id="sim-live-stock">0 L</strong></div>
+                                <div><div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">CALCULATED TOTAL</div><strong style="color: #38bdf8; font-size: 1.1rem;" id="sim-est-amount">₹0.00</strong></div>
+                                <div><div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">STATUS</div><span class="badge badge-online" id="sim-status-badge">READY</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- 4. SALES LEDGER VIEW -->
+            <section id="view-sales" class="view-section">
+                <div class="table-card">
+                    <div class="table-toolbar">
+                        <div class="search-box"><i class="fas fa-search" style="color: var(--text-muted);"></i><input type="text" id="sales-search-input" placeholder="Search TXN, Pump, Fuel..." onkeyup="SalesModule.filter()"></div>
+                        <button class="btn btn-secondary btn-sm" onclick="SalesModule.load()"><i class="fas fa-sync"></i> Refresh</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Transaction No</th><th>Date & Time</th><th>Pump</th><th>Fuel</th><th>Attendant</th><th>Quantity</th><th>Unit</th><th>Price</th><th>Total Amount</th><th>Status</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="sales-table-tbody">
+                                <tr><td colspan="11" class="empty-state">Loading sales ledger...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. BILLING & INVOICES VIEW -->
+            <section id="view-billing" class="view-section">
+                <div class="table-card">
+                    <div class="table-toolbar">
+                        <h3 style="font-size: 1.05rem; font-weight: 700;">Generated Invoices</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="BillingModule.load()"><i class="fas fa-sync"></i> Refresh</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Invoice No</th><th>Transaction No</th><th>Date</th><th>Customer</th><th>Vehicle</th><th>Fuel Dispensed</th><th>Total Amount</th><th>Payment</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="invoices-table-tbody">
+                                <tr><td colspan="9" class="empty-state">Loading invoices...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. FUELS VIEW -->
+            <section id="view-fuels" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <h3 style="font-size: 1.1rem; font-weight: 700;">Fuel Products & Pricing Master</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">Manage fuel catalog and unit prices</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('add-fuel-modal')"><i class="fas fa-plus"></i> Add Fuel Type</button>
+                </div>
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Fuel Code</th><th>Fuel Name</th><th>Price Per Unit</th><th>Unit</th><th>Status</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="fuels-table-tbody">
+                                <tr><td colspan="6" class="empty-state">Loading fuels...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7. INVENTORY VIEW -->
+            <section id="view-inventory" class="view-section">
+                <div style="margin-bottom: 20px;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700;">Underground Tank Inventory Monitoring</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Live stock levels, minimum thresholds and tank restock operations</p>
+                </div>
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Fuel Code</th><th>Fuel Product</th><th>Current Stock</th><th>Unit</th><th>Minimum Level</th><th>Tank Status</th><th>Last Updated</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="inventory-table-tbody">
+                                <tr><td colspan="8" class="empty-state">Loading inventory...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 8. EMPLOYEES VIEW -->
+            <section id="view-employees" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <h3 style="font-size: 1.1rem; font-weight: 700;">Station Staff & Attendants</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">Staff profiles and employee records</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('add-employee-modal')"><i class="fas fa-user-plus"></i> Add Staff</button>
+                </div>
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Employee Code</th><th>Name</th><th>Role</th><th>Phone</th><th>Email</th><th>Salary</th><th>Status</th><th>Joining Date</th></tr>
+                            </thead>
+                            <tbody id="employees-table-tbody">
+                                <tr><td colspan="8" class="empty-state">Loading employees...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 9. SUPPLIERS VIEW -->
+            <section id="view-suppliers" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <h3 style="font-size: 1.1rem; font-weight: 700;">Petroleum Suppliers & Depots</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">Terminal supply partners and logistics</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('add-supplier-modal')"><i class="fas fa-truck"></i> Register Supplier</button>
+                </div>
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Supplier Code</th><th>Company Name</th><th>Contact Phone</th><th>Email</th><th>Terminal Address</th><th>Status</th></tr>
+                            </thead>
+                            <tbody id="suppliers-table-tbody">
+                                <tr><td colspan="6" class="empty-state">Loading suppliers...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 10. REPORTS VIEW -->
+            <section id="view-reports" class="view-section">
+                <div class="sim-config-card" style="margin-bottom: 24px;">
+                    <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 16px;"><i class="fas fa-filter" style="color: var(--accent-blue);"></i> Report Filter Criteria</h3>
+                    <div class="form-grid">
+                        <div class="form-group"><label class="form-label">From Date</label><input type="date" class="form-control" id="rpt-start-date"></div>
+                        <div class="form-group"><label class="form-label">To Date</label><input type="date" class="form-control" id="rpt-end-date"></div>
+                        <div class="form-group"><label class="form-label">Fuel Type</label><select class="form-control" id="rpt-fuel-select"><option value="">-- All Fuels --</option><option value="PETROL">Petrol</option><option value="DIESEL">Diesel</option><option value="CNG">CNG</option></select></div>
+                        <div class="form-group"><label class="form-label">Dispenser Point</label><select class="form-control" id="rpt-pump-select"><option value="">-- All Pumps --</option><option value="PUMP-01">PUMP-01</option><option value="PUMP-02">PUMP-02</option><option value="PUMP-03">PUMP-03</option><option value="PUMP-04">PUMP-04</option></select></div>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-top: 10px;">
+                        <button class="btn btn-primary" onclick="ReportsModule.applyFilter()"><i class="fas fa-search"></i> Generate Report</button>
+                        <button class="btn btn-secondary" onclick="ReportsModule.resetFilters()"><i class="fas fa-undo"></i> Reset Filters</button>
+                    </div>
+                </div>
+                <div class="kpi-grid">
+                    <div class="kpi-card kpi-blue"><div class="kpi-info"><h4>Total Transactions</h4><div class="kpi-value" id="rpt-total-txns">0</div></div><div class="kpi-icon"><i class="fas fa-receipt"></i></div></div>
+                    <div class="kpi-card kpi-green"><div class="kpi-info"><h4>Total Revenue</h4><div class="kpi-value" id="rpt-total-revenue">₹0.00</div></div><div class="kpi-icon"><i class="fas fa-coins"></i></div></div>
+                    <div class="kpi-card kpi-amber"><div class="kpi-info"><h4>Volume Dispensed</h4><div class="kpi-value" id="rpt-total-volume">0 Units</div></div><div class="kpi-icon"><i class="fas fa-gas-pump"></i></div></div>
+                </div>
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Transaction No</th><th>Date</th><th>Pump</th><th>Fuel</th><th>Attendant</th><th>Quantity</th><th>Amount</th></tr>
+                            </thead>
+                            <tbody id="rpt-sales-table-tbody">
+                                <tr><td colspan="7" class="empty-state">No report generated</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <!-- MODALS -->
+    <!-- Invoice Viewer Modal -->
+    <div class="modal-backdrop" id="invoice-modal">
+        <div class="modal-card" style="max-width: 740px;">
+            <div class="modal-header"><h3>Official Fuel Invoice / Bill</h3><button class="modal-close">&times;</button></div>
+            <div class="modal-body" id="invoice-render-box"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-modal-cancel">Close</button>
+                <button class="btn btn-primary" onclick="BillingModule.printCurrentInvoice()"><i class="fas fa-print"></i> Print Invoice</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restock Tank Modal -->
+    <div class="modal-backdrop" id="restock-modal">
+        <div class="modal-card">
+            <div class="modal-header"><h3>Restock Fuel Tank</h3><button class="modal-close">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="restock-fuel-code">
+                <div style="margin-bottom: 16px;"><div style="font-size: 0.8rem; color: var(--text-muted);">TARGET PRODUCT</div><strong style="font-size: 1.1rem; color: #38bdf8;" id="restock-fuel-title">Fuel</strong></div>
+                <div class="form-group"><label class="form-label">Adjustment Type</label><select class="form-control" id="restock-action"><option value="ADD">Add to Existing Tank Stock (+)</option><option value="SET">Set / Calibrate Exact Stock (=)</option></select></div>
+                <div class="form-group"><label class="form-label">Quantity (<span id="restock-unit-label">L</span>)</label><input type="number" step="0.1" min="0.1" class="form-control" id="restock-qty" value="500"></div>
+                <div class="form-group"><label class="form-label">Notes / Delivery Challan</label><input type="text" class="form-control" id="restock-notes" placeholder="Tanker Challan #4829"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-modal-cancel">Cancel</button>
+                <button class="btn btn-success" onclick="InventoryModule.submitRestock()"><i class="fas fa-check"></i> Update Tank Inventory</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Fuel Price Modal -->
+    <div class="modal-backdrop" id="edit-fuel-modal">
+        <div class="modal-card">
+            <div class="modal-header"><h3>Update Fuel Price & Config</h3><button class="modal-close">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Fuel Code</label><input type="text" class="form-control" id="edit-fuel-code" disabled></div>
+                <div class="form-group"><label class="form-label">Fuel Display Name</label><input type="text" class="form-control" id="edit-fuel-name"></div>
+                <div class="form-group"><label class="form-label">Price Per Unit (₹)</label><input type="number" step="0.01" class="form-control" id="edit-fuel-price"></div>
+                <div class="form-group"><label class="form-label">Unit</label><select class="form-control" id="edit-fuel-unit"><option value="L">L (Litres)</option><option value="KG">KG (Kilograms)</option></select></div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px;"><input type="checkbox" id="edit-fuel-active"><label for="edit-fuel-active" class="form-label" style="margin: 0;">Active for Dispensing</label></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-modal-cancel">Cancel</button>
+                <button class="btn btn-primary" onclick="FuelsModule.saveFuel()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Fuel Modal -->
+    <div class="modal-backdrop" id="add-fuel-modal">
+        <div class="modal-card">
+            <div class="modal-header"><h3>Add New Fuel Product</h3><button class="modal-close">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Fuel Code</label><input type="text" class="form-control" id="add-fuel-code" placeholder="PREMIUM_PETROL"></div>
+                <div class="form-group"><label class="form-label">Fuel Name</label><input type="text" class="form-control" id="add-fuel-name" placeholder="Speed 97 Octane"></div>
+                <div class="form-group"><label class="form-label">Price Per Unit (₹)</label><input type="number" step="0.01" class="form-control" id="add-fuel-price" placeholder="115.00"></div>
+                <div class="form-group"><label class="form-label">Unit</label><select class="form-control" id="add-fuel-unit"><option value="L">L (Litres)</option><option value="KG">KG (Kilograms)</option></select></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-modal-cancel">Cancel</button>
+                <button class="btn btn-primary" onclick="FuelsModule.createFuel()">Register Fuel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Dispenser Modal -->
+    <div class="modal-backdrop" id="add-pump-modal">
+        <div class="modal-card">
+            <div class="modal-header"><h3>Add New Forecourt Dispenser</h3><button class="modal-close">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Dispenser Name</label><input type="text" class="form-control" id="add-pump-name" placeholder="Dispenser 05 - Island East"></div>
+                <div class="form-group"><label class="form-label">Supported Fuel</label><select class="form-control" id="add-pump-fuel"><option value="PETROL">Petrol</option><option value="DIESEL">Diesel</option><option value="CNG">CNG</option></select></div>
+                <div class="form-group"><label class="form-label">Initial Status</label><select class="form-control" id="add-pump-status"><option value="ONLINE">ONLINE</option><option value="OFFLINE">OFFLINE</option><option value="MAINTENANCE">MAINTENANCE</option></select></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-modal-cancel">Cancel</button>
+                <button class="btn btn-primary" onclick="PumpsModule.createPump()">Create Dispenser</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pump Status Modal -->
+    <div class="modal-backdrop" id="pump-status-modal">
+        <div class="modal-card">
+            <div class="modal-header"><h3>Update Dispenser Status</h3><button class="modal-close">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="status-pump-code">
+                <div class="form-group"><label class="form-label">Status</label><select class="form-control" id="status-pump-select"><option value="ONLINE">ONLINE</option><option value="OFFLINE">OFFLINE</option><option value="MAINTENANCE">MAINTENANCE</option></select></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-modal-cancel">Cancel</button>
+                <button class="btn btn-primary" onclick="PumpsModule.saveStatus()">Save Status</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Employee Modal -->
+    <div class="modal-backdrop" id="add-employee-modal">
+        <div class="modal-card">
+            <div class="modal-header"><h3>Register Station Staff</h3><button class="modal-close">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-control" id="add-emp-name" placeholder="Ramesh Patel"></div>
+                <div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-control" id="add-emp-phone" placeholder="+91 9876543210"></div>
+                <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control" id="add-emp-email" placeholder="ramesh@petroflow.com"></div>
+                <div class="form-group"><label class="form-label">Role</label><select class="form-control" id="add-emp-role"><option value="Fuel Attendant">Fuel Attendant</option><option value="Station Supervisor">Station Supervisor</option><option value="Forecourt Cashier">Forecourt Cashier</option></select></div>
+                <div class="form-group"><label class="form-label">Salary (₹)</label><input type="number" class="form-control" id="add-emp-salary" value="25000"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-modal-cancel">Cancel</button>
+                <button class="btn btn-primary" onclick="EmployeesModule.createEmployee()">Register Staff</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Supplier Modal -->
+    <div class="modal-backdrop" id="add-supplier-modal">
+        <div class="modal-card">
+            <div class="modal-header"><h3>Register Fuel Supplier</h3><button class="modal-close">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Company Name</label><input type="text" class="form-control" id="add-sup-name" placeholder="Hindustan Petroleum Corp"></div>
+                <div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-control" id="add-sup-phone" placeholder="+91 22 22863900"></div>
+                <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control" id="add-sup-email" placeholder="supply@hpcl.in"></div>
+                <div class="form-group"><label class="form-label">Terminal Address</label><input type="text" class="form-control" id="add-sup-address" placeholder="Terminal Gate 3"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-modal-cancel">Cancel</button>
+                <button class="btn btn-primary" onclick="SuppliersModule.createSupplier()">Save Supplier</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/simulator.js"></script>
+    <script src="js/pumps.js"></script>
+    <script src="js/sales.js"></script>
+    <script src="js/billing.js"></script>
+    <script src="js/fuels.js"></script>
+    <script src="js/inventory.js"></script>
+    <script src="js/employees.js"></script>
+    <script src="js/suppliers.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
